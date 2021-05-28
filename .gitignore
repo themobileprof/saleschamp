@@ -1,0 +1,9 @@
+terraform/.terraform
+
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# configuration files
+.env
