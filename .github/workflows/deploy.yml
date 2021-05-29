@@ -3,13 +3,11 @@
 name: Deployment
 
 on:
-  pull_request:
   push:
     branches:
       - main
-  release:
-    types:
-      - created
+    tags:        
+      - v*
 
 jobs:
     continuous-deployment:
