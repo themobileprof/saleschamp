@@ -43,6 +43,9 @@ resource "aws_instance" "web" {
 
   subnet_id = module.vpc.public_subnets[count.index % length(module.vpc.public_subnets)]
 
+  # Attach IAM roles
+  iam_instance_profile = aws_iam_instance_profile.saleschamp_profile.name
+
   # Attach Public key
   key_name = aws_key_pair.deployer.id
 
@@ -51,6 +54,7 @@ resource "aws_instance" "web" {
 
   tags = {
     Name = "saleschamp-vm-${count.index}"
+	DeployName = "main-instances"
   }
 }
 
@@ -248,3 +252,86 @@ data "template_file" "user_data" {
   template = file("install.sh")
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+resource "aws_iam_instance_profile" "saleschamp_profile" {
+  name = "saleschamp_profile"
+  role = aws_iam_role.saleschamp-iam.name
+}
+
+resource "aws_iam_role" "saleschamp-iam" {
+  name = "saleschamp-iam"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "codedeploy.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "AWSCodeDeployRole" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
+  role       = aws_iam_role.saleschamp-iam.name
+}
+
+resource "aws_codedeploy_app" "saleschamp" {
+  name = "saleschamp-app"
+}
+
+resource "aws_codedeploy_deployment_group" "saleschamp" {
+  app_name              = aws_codedeploy_app.saleschamp.name
+  deployment_group_name = "saleschamp-group"
+  service_role_arn      = aws_iam_role.saleschamp-iam.arn
+
+  ec2_tag_filter {
+      key   = "DeployName"
+      type  = "KEY_AND_VALUE"
+      value = "main-instances"
+  }
+  
+  load_balancer_info {
+    target_group_info {
+      name = aws_lb.alb.name
+    }
+  }
+
+  autoscaling_groups = [aws_autoscaling_group.saleschamp-aasg.id]
+}

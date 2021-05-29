@@ -1,0 +1,11 @@
+version: 0.0
+os: linux
+hooks:
+  AfterInstall:
+    - location: scripts/pull-app.sh
+      runas: root
+      timeout: 300
+  ApplicationStart:
+    - location: scripts/restart-app.sh
+      runas: root
+      timeout: 60

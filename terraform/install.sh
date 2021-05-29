@@ -4,7 +4,15 @@
 sudo apt update -y
 
 # Install Curl for the next action 
+sudo apt install ruby-full
 sudo apt install curl git nginx -y
+
+# Install AWS CodeDeploy
+cd /home/ubuntu
+curl -O https://aws-codedeploy-us-west-1.s3.us-west-1.amazonaws.com/latest/install
+chmod +x ./install
+sudo ./install auto
+sudo ./install auto
 
 # Setup Nginx and SSH to allow on firewall
 sudo ufw allow 443/tcp
