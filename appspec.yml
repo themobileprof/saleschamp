@@ -3,9 +3,9 @@ os: linux
 hooks:
   AfterInstall:
     - location: scripts/pull-app.sh
-      runas: root
+      runas: ubuntu
       timeout: 300
   ApplicationStart:
     - location: scripts/restart-app.sh
-      runas: root
+      runas: ubuntu
       timeout: 60

@@ -265,23 +265,6 @@ data "template_file" "user_data" {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 resource "aws_iam_instance_profile" "saleschamp_profile" {
   name = "saleschamp_profile"
   role = aws_iam_role.saleschamp-iam.name
@@ -290,21 +273,27 @@ resource "aws_iam_instance_profile" "saleschamp_profile" {
 resource "aws_iam_role" "saleschamp-iam" {
   name = "saleschamp-iam"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "codedeploy.amazonaws.com"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
       },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "codedeploy.amazonaws.com"
+        }
+      },
+    ]
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "AWSCodeDeployRole" {
