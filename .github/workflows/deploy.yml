@@ -8,6 +8,11 @@ on:
       - main
     tags:        
       - v*
+  pull_request:
+    branches:
+      - main
+    tags:        
+      - v*
 
 jobs:
     continuous-deployment:
