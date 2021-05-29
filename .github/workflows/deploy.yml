@@ -29,7 +29,7 @@ jobs:
           - name: Create CodeDeploy Deployment
             id: deploy
             run: |
-              aws deploy create-deployment \
+              aws --region us-west-1 deploy create-deployment \
                 --application-name saleschamp-app \
                 --deployment-group-name saleschamp-group \
                 --deployment-config-name CodeDeployDefault.OneAtATime \
