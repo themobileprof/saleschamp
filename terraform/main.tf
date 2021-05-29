@@ -270,6 +270,26 @@ data "template_file" "user_data" {
 
 
 
+data "aws_iam_policy_document" "saleschamp" {
+  statement {
+	actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+
+    principals {
+      type        = "Service"
+      identifiers = ["codedeploy.amazonaws.com"]
+    }
+  }
+}
+
+
+
+
+
 resource "aws_iam_instance_profile" "saleschamp_profile" {
   name = "saleschamp_profile"
   role = aws_iam_role.saleschamp-iam.name
@@ -279,19 +299,7 @@ resource "aws_iam_instance_profile" "saleschamp_profile" {
 resource "aws_iam_role" "saleschamp-iam" {
   name = "saleschamp-iam"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      },
-    ]
-  })
+  assume_role_policy = data.aws_iam_policy_document.saleschamp.json
 }
 
 
