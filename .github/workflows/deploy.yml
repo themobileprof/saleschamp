@@ -5,9 +5,9 @@ name: Deployment
 on:
   push:
     branches:
-      - "!*"
+      - '!*'
     tags:        
-      - "v*"
+      - v*.*
 
 jobs:
     continuous-deployment:
