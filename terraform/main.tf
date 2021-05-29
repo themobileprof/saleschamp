@@ -7,10 +7,12 @@ terraform {
   }
 }
 
+
 provider "aws" {
   profile = "default"
   region = "us-west-1"
 }
+
 
 //VPC
 module "vpc" {
@@ -22,6 +24,7 @@ module "vpc" {
   azs            = var.azs
   public_subnets = var.subnet_cidr
 }
+
 
 # Original AWS Instance creation
 resource "aws_instance" "web" {
@@ -87,6 +90,7 @@ resource "aws_lb" "alb" {
   }
 }
 
+
 # The S3 bucket for logs
 resource "aws_s3_bucket" "lb_logs" {
   bucket        = "saleschamp-applb-logs"
@@ -130,6 +134,7 @@ resource "aws_lb_target_group" "saleschamp" {
   }
 }
 
+
 # Attach target groups to Instances
 resource "aws_lb_target_group_attachment" "saleschamp" {
   count            = length(aws_instance.web)
@@ -137,6 +142,7 @@ resource "aws_lb_target_group_attachment" "saleschamp" {
   target_id        = aws_instance.web[count.index].id
   port             = 80
 }
+
 
 # ALB listener on port 80
 resource "aws_lb_listener" "alb_listener" {
@@ -161,7 +167,6 @@ resource "aws_launch_template" "saleschamp-autoscaling" {
   # Security for Instances created by the autoscaler
   vpc_security_group_ids = [aws_security_group.front-security.id]
 
-  
   user_data = base64encode(data.template_file.user_data.rendered)
 }
 
@@ -170,7 +175,8 @@ resource "aws_autoscaling_group" "saleschamp-aasg" {
   vpc_zone_identifier = module.vpc.public_subnets
 
   # Desired, maximum and minimum instances by the autoscaler
-  desired_capacity   = 2
+
+desired_capacity   = 2
   max_size           = 4
   min_size           = 1
   
@@ -192,15 +198,17 @@ resource "aws_autoscaling_group" "saleschamp-aasg" {
   }
 }
 
+
 # Create a new ALB Target Group attachment
 resource "aws_autoscaling_attachment" "saleschamp" {
   autoscaling_group_name = aws_autoscaling_group.saleschamp-aasg.id
   alb_target_group_arn   = aws_lb_target_group.saleschamp.arn
 }
 
+
 ## Security Group for ELB
 resource "aws_security_group" "front-security" {
-  name = "front-security"
+name = "front-security"
   description = "Ingress and Egress traffic allowing http and https traffic"
 
   vpc_id = module.vpc.vpc_id
@@ -230,6 +238,7 @@ resource "aws_security_group" "front-security" {
   }
 }
 
+
 resource "aws_security_group" "back-security" {
   name        = "back-security"
   description = "SSH Access to Server"
@@ -239,12 +248,11 @@ resource "aws_security_group" "back-security" {
   ingress {
     description = "SSH from VPC"
     from_port   = 22
-    to_port     = 22
+	to_port     = 22
     protocol    = "tcp"
     cidr_blocks = var.cidr_block
   }
 }
-
 
 
 // Using a Bash script for Initial Setup
@@ -262,13 +270,11 @@ data "template_file" "user_data" {
 
 
 
-
-
-
 resource "aws_iam_instance_profile" "saleschamp_profile" {
   name = "saleschamp_profile"
   role = aws_iam_role.saleschamp-iam.name
 }
+
 
 resource "aws_iam_role" "saleschamp-iam" {
   name = "saleschamp-iam"
@@ -284,26 +290,21 @@ resource "aws_iam_role" "saleschamp-iam" {
           Service = "ec2.amazonaws.com"
         }
       },
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
-        Principal = {
-          Service = "codedeploy.amazonaws.com"
-        }
-      },
     ]
   })
 }
+
 
 resource "aws_iam_role_policy_attachment" "AWSCodeDeployRole" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
   role       = aws_iam_role.saleschamp-iam.name
 }
 
+
 resource "aws_codedeploy_app" "saleschamp" {
   name = "saleschamp-app"
 }
+
 
 resource "aws_codedeploy_deployment_group" "saleschamp" {
   app_name              = aws_codedeploy_app.saleschamp.name
