@@ -12,7 +12,8 @@ on:
 jobs:
     continuous-deployment:
         runs-on: ubuntu-latest
-        if: github.ref == 'refs/heads/main'
+        # Only enable the owner of this repo to run this script
+        if: github.actor == github.repository_owner
         steps:     # Step 1
           - name: Configure AWS credentials
             uses: aws-actions/configure-aws-credentials@v1
