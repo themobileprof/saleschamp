@@ -25,7 +25,8 @@ jobs:
             cd /var/www/html/saleschamp
             sudo git pull
             sudo npm update
-            sudo pm2 reload app
+            sudo su
+            pm2 reload app
       - name: Git Pull on Server 2
         uses: appleboy/ssh-action@master
         with:
@@ -36,4 +37,5 @@ jobs:
             cd /var/www/html/saleschamp
             sudo git pull
             sudo npm update
-            sudo pm2 reload app
+            sudo su
+            pm2 reload app
