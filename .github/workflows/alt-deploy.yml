@@ -24,8 +24,7 @@ jobs:
           script: |
             cd /var/www/html/saleschamp
             git pull
-            npm install
-            pm2 reload app
+            sudo npm update
       - name: Git Pull on Server 2
         uses: appleboy/ssh-action@master
         with:
@@ -35,5 +34,4 @@ jobs:
           script: |
             cd /var/www/html/saleschamp
             git pull
-            npm install
-            pm2 reload app
+            sudo npm update

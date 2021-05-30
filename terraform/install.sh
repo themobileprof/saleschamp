@@ -67,7 +67,7 @@ chgrp -R pm2 /var/www/html/saleschamp
 usermod -aG pm2 ubuntu
 
 # Create an Alias
-echo "alias pm2='env HOME=/var/www pm2'" > /etc/profile.d/00-pm2.sh
+echo "alias pm2='env HOME=/var/www/html/saleschamp pm2'" > /etc/profile.d/00-pm2.sh
 
 
 
@@ -77,6 +77,7 @@ echo "alias pm2='env HOME=/var/www pm2'" > /etc/profile.d/00-pm2.sh
 cd /var/www/html/saleschamp
 
 # Run The NodeJS App in the background
-pm2 start app.js
+npm install
+pm2 start app.js --watch
 pm2 save
 
