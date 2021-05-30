@@ -168,6 +168,19 @@ resource "aws_launch_template" "saleschamp-autoscaling" {
   vpc_security_group_ids = [aws_security_group.front-security.id]
 
   user_data = base64encode(data.template_file.user_data.rendered)
+
+
+  tag_specifications {
+    resource_type = "instance"
+
+    tags = {
+      Name = "saleschamp-auto-${random_id.server.id}"
+    }
+  }
+}
+
+resource "random_id" "server" {
+  byte_length = 8
 }
 
 
@@ -176,7 +189,7 @@ resource "aws_autoscaling_group" "saleschamp-aasg" {
 
   # Desired, maximum and minimum instances by the autoscaler
 
-desired_capacity   = 2
+  desired_capacity   = 2
   max_size           = 4
   min_size           = 1
   

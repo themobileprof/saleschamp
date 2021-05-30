@@ -4,10 +4,8 @@ name: Deployment
 
 on:
   push:
-    branches:
-      - '!*'
     tags:        
-      - '*'
+      - 'v*'
 
 jobs:
     continuous-deployment:

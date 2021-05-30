@@ -1,0 +1,39 @@
+name: iGetBelle theme CD
+
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    tags:        
+      - 'p*'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Git Pull on Server 1
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST1 }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          script: |
+            cd /var/www/html/saleschamp
+            git pull
+            npm install
+            pm2 reload app
+      - name: Git Pull on Server 2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST2 }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          script: |
+            cd /var/www/html/saleschamp
+            git pull
+            npm install
+            pm2 reload app
