@@ -12,8 +12,7 @@
 - [x]  Provision and test the Servers using Terraform
 - [x]  Setup SSH keys on the Servers
 - [x]  Save private keys on Github Secrets
-- [x] Create CD script, using the AWS Code Deploy and Github Actions hooks to trigger a git pull from the EC2 Servers
-- [ ] Setup prometheus and cover availability of the VMs and Load Balancer
-- [ ] Set an Alert on the resources that logs errors and sends an email
-- [ ] Use Graphana to plot and check availability
-
+- [x] Create CD script, using the AWS Code Deploy and Github Actions hooks to trigger a git pull from the EC2 Servers, this is triggered by tags starting with `v` e.g. `v1.2`
+- [x] Created backup simpler deploy Workflow that requires ip address of destination server, triggered by tags starting with `p` e.g. `p1.2`
+- [X] Setup AWS CloudWatch for Logs and to metrics
+- [x] Use Graphana to plot metrics on a dashboard
