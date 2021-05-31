@@ -74,6 +74,6 @@ cd /var/www/saleschamp
 
 # Run The NodeJS App in the background
 npm install
-pm2 start app.js
+pm2 start app.js --watch
 pm2 save
 

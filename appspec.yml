@@ -5,7 +5,3 @@ hooks:
     - location: scripts/pull-app.sh
       runas: ubuntu
       timeout: 300
-  ApplicationStart:
-    - location: scripts/restart-app.sh
-      runas: ubuntu
-      timeout: 60
