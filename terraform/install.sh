@@ -7,11 +7,11 @@ sudo apt update -y
 sudo apt install ruby-full
 sudo apt install curl git nginx -y
 
+
 # Install AWS CodeDeploy
 cd /home/ubuntu
 curl -O https://aws-codedeploy-us-west-1.s3.us-west-1.amazonaws.com/latest/install
 chmod +x ./install
-sudo ./install auto
 sudo ./install auto
 
 # Setup Nginx and SSH to allow on firewall
@@ -47,37 +47,33 @@ sudo apt install -y nodejs
 
 # Install PM
 npm install pm2@latest -g
-pm2 startup
 
-
-# Go to the www directory
-cd /var/www/html
-
-# Clone the SalesChamp repo
-git clone https://github.com/themobileprof/saleschamp.git /var/www/html/saleschamp
 
 
 # Create a PM2 Group
-groupadd pm2
+ groupadd pm2
 
 # Change www directorygroup owner to group pm2
-chgrp -R pm2 /var/www/html/saleschamp
+ chgrp -R pm2 /var/www
 
 # Add "ubuntu" to pm2 group
-usermod -aG pm2 ubuntu
+ usermod -aG pm2 ubuntu
 
 # Create an Alias
-echo "alias pm2='env HOME=/var/www/html/saleschamp pm2'" > /etc/profile.d/00-pm2.sh
+echo "alias pm2='env HOME=/var/www pm2'" > /etc/profile.d/00-pm2.sh
 
 
 
 
+
+# Clone the SalesChamp repo
+git clone https://github.com/themobileprof/saleschamp.git /var/www/saleschamp
 
 # Go to the saleschamp directory
-cd /var/www/html/saleschamp
+cd /var/www/saleschamp
 
 # Run The NodeJS App in the background
 npm install
-pm2 start app.js --watch
+pm2 start app.js
 pm2 save
 

@@ -23,9 +23,8 @@ jobs:
           key: ${{ secrets.KEY }}
           script: |
             cd /var/www/html/saleschamp
-            sudo git pull
-            sudo npm update
-            sudo su
+            git pull
+            npm update
             pm2 reload app
       - name: Git Pull on Server 2
         uses: appleboy/ssh-action@master
@@ -35,7 +34,6 @@ jobs:
           key: ${{ secrets.KEY }}
           script: |
             cd /var/www/html/saleschamp
-            sudo git pull
-            sudo npm update
-            sudo su
+            git pull
+            npm update
             pm2 reload app

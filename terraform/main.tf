@@ -27,39 +27,39 @@ module "vpc" {
 
 
 # Original AWS Instance creation
-resource "aws_instance" "web" {
-  ami           = var.ami
-  instance_type = "t2.micro"
+#resource "aws_instance" "web" {
+  #ami           = var.ami
+  #instance_type = "t2.micro"
 
-  count			= var.vms
+  #count			= var.vms
 
-  # Persistent Storage
-  ebs_block_device {
-    device_name = "/dev/sdh"
-    volume_size = 5
-    volume_type = "gp2"
-    delete_on_termination = false
-  }
+  ## Persistent Storage
+  #ebs_block_device {
+    #device_name = "/dev/sdh"
+    #volume_size = 5
+    #volume_type = "gp2"
+    #delete_on_termination = false
+  #}
 
-  # Firewall for this VM
-  vpc_security_group_ids = [aws_security_group.front-security.id,aws_security_group.back-security.id]
+  ## Firewall for this VM
+  #vpc_security_group_ids = [aws_security_group.security_grp.id]
 
-  subnet_id = module.vpc.public_subnets[count.index % length(module.vpc.public_subnets)]
+  #subnet_id = module.vpc.public_subnets[count.index % length(module.vpc.public_subnets)]
 
-  # Attach IAM roles
-  iam_instance_profile = aws_iam_instance_profile.saleschamp_profile.name
+  ## Attach IAM roles
+  #iam_instance_profile = aws_iam_instance_profile.saleschamp_profile.name
 
-  # Attach Public key
-  key_name = aws_key_pair.deployer.id
+  ## Attach Public key
+  #key_name = aws_key_pair.deployer.id
 
-  # Use the Install.sh below for Provisioning setup
-  user_data = data.template_file.user_data.rendered
+  ## Use the Install.sh below for Provisioning setup
+  #user_data = data.template_file.user_data.rendered
 
-  tags = {
-    Name = "saleschamp-vm-${count.index}"
-	DeployName = "main-instances"
-  }
-}
+  #tags = {
+    #Name = "saleschamp-vm-${count.index}"
+	#DeployName = "main-instances"
+  #}
+#}
 
 
 resource "aws_key_pair" "deployer" {
@@ -75,7 +75,7 @@ resource "aws_lb" "alb" {
  load_balancer_type = "application"
 
  # Firewall for ALB
- security_groups    = [aws_security_group.front-security.id]
+ security_groups    = [aws_security_group.security_grp.id]
  subnets            = module.vpc.public_subnets
 
   # Access Logs stored in an S3 bucket
@@ -135,14 +135,6 @@ resource "aws_lb_target_group" "saleschamp" {
 }
 
 
-# Attach target groups to Instances
-resource "aws_lb_target_group_attachment" "saleschamp" {
-  count            = length(aws_instance.web)
-  target_group_arn = aws_lb_target_group.saleschamp.arn
-  target_id        = aws_instance.web[count.index].id
-  port             = 80
-}
-
 
 # ALB listener on port 80
 resource "aws_lb_listener" "alb_listener" {
@@ -156,27 +148,44 @@ resource "aws_lb_listener" "alb_listener" {
 }
 
 
-
 # AWS instances launch template for the Autoscaling functionality
-resource "aws_launch_template" "saleschamp-autoscaling" {
+resource "aws_launch_template" "saleschamp-launch" {
   name_prefix   = "saleschamp-as-"
   image_id      = var.ami
   instance_type = "t2.micro"
   instance_initiated_shutdown_behavior = "terminate"
 
+  # Attach Public key
+  key_name = aws_key_pair.deployer.key_name
+
   # Security for Instances created by the autoscaler
-  vpc_security_group_ids = [aws_security_group.front-security.id]
+  vpc_security_group_ids = [aws_security_group.security_grp.id]
 
-  user_data = base64encode(data.template_file.user_data.rendered)
+  # External Disk
+  block_device_mappings {
+    device_name = "/dev/sdh"
 
+    ebs {
+      volume_size = var.v_size
+      volume_type = var.v_type
+    }
+  }
 
   tag_specifications {
     resource_type = "instance"
 
     tags = {
-      Name = "saleschamp-auto-${random_id.server.id}"
+      Name = "saleschamp-vm-${random_id.server.id}"
+	  DeployName = "main-instances"
     }
   }
+
+  # Attach IAM roles
+  iam_instance_profile {
+    name = aws_iam_instance_profile.saleschamp_profile.name
+  }
+
+  user_data = base64encode(data.template_file.user_data.rendered)
 }
 
 resource "random_id" "server" {
@@ -207,7 +216,8 @@ resource "aws_autoscaling_group" "saleschamp-aasg" {
 
   # Use a template to launch new instances
   launch_template {
-    id      = aws_launch_template.saleschamp-autoscaling.id
+    id      = aws_launch_template.saleschamp-launch.id
+	version = aws_launch_template.saleschamp-launch.latest_version
   }
 }
 
@@ -220,8 +230,8 @@ resource "aws_autoscaling_attachment" "saleschamp" {
 
 
 ## Security Group for ELB
-resource "aws_security_group" "front-security" {
-name = "front-security"
+resource "aws_security_group" "security_grp" {
+name = "security_grp"
   description = "Ingress and Egress traffic allowing http and https traffic"
 
   vpc_id = module.vpc.vpc_id
@@ -242,6 +252,15 @@ name = "front-security"
     cidr_blocks      = var.cidr_block
   }
 
+  # SSH Access to Server
+  ingress {
+    description = "SSH from VPC"
+    from_port   = 22
+	to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = var.cidr_block
+  }
+
   egress {
 	# Outbound traffic is set to all
 	from_port   = 0
@@ -252,25 +271,12 @@ name = "front-security"
 }
 
 
-resource "aws_security_group" "back-security" {
-  name        = "back-security"
-  description = "SSH Access to Server"
-
-  vpc_id = module.vpc.vpc_id
-
-  ingress {
-    description = "SSH from VPC"
-    from_port   = 22
-	to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = var.cidr_block
-  }
-}
-
-
 // Using a Bash script for Initial Setup
 data "template_file" "user_data" {
   template = file("install.sh")
+  vars = {
+	public_key = var.public_key
+  }
 }
 
 
@@ -331,12 +337,6 @@ resource "aws_codedeploy_deployment_group" "saleschamp" {
   app_name              = aws_codedeploy_app.saleschamp.name
   deployment_group_name = "saleschamp-group"
   service_role_arn      = aws_iam_role.saleschamp-iam.arn
-
-  ec2_tag_filter {
-      key   = "DeployName"
-      type  = "KEY_AND_VALUE"
-      value = "main-instances"
-  }
   
   load_balancer_info {
     target_group_info {
